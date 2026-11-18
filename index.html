@@ -4,15 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#102942" />
-  <meta name="description" content="2026 信州・長野秋冬之旅互動地圖與每日行程。" />
-  <title>2026 信州・長野秋冬之旅｜互動旅行地圖</title>
+  <meta name="description" content="202612信州行互動地圖與每日行程。" />
+  <title>202612信州行｜互動旅行地圖</title>
   <link rel="stylesheet" href="./styles.css" />
   <script src="./app.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#map-heading">跳至互動地圖</a>
   <header class="topbar">
-    <div class="brand"><span class="brand-icon">🍁</span><div><strong>信州・長野秋冬之旅</strong><small>2026.11.25 — 12.02</small></div></div>
+    <div class="brand"><span class="brand-icon">🍁</span><div><strong>202612信州行</strong><small>2026.11.25 — 12.02</small></div></div>
     <div class="top-actions"><button class="outline-btn" id="open-all" type="button">📅 每日行程</button><button class="outline-btn" id="open-budget" type="button">¥ 費用記錄</button></div>
   </header>
   <main>
@@ -21,14 +21,14 @@
       <div class="map-section">
         <div class="map-toolbar"><span class="map-label"><span class="pulse-dot"></span> 點選地圖上的城市</span><button type="button" class="text-btn" id="reset-view">返回地圖總覽 ↗</button></div>
         <div class="map-stage" id="map-stage">
-          <img class="map-image" src="./assets/shinshu-map.png" alt="2026 信州長野秋冬之旅手繪地圖，標示川崎、長野、松本、金澤、輕井澤及東京成田" width="1122" height="1402" />
+          <img class="map-image" src="./assets/shinshu-map.png" alt="202612信州行手繪互動地圖，標示川崎、長野、松本、金澤、輕井澤及東京成田" width="1122" height="1402" />
           <svg class="hotspot-layer" viewBox="0 0 1122 1402" role="group" aria-label="可點選的六個城市" preserveAspectRatio="xMidYMid meet">
-            <g class="hotspot" data-city="kanazawa" role="button" tabindex="0" aria-label="開啟金澤行程" ><circle class="hit" cx="160" cy="328" r="124"/><circle class="halo" cx="160" cy="328" r="121"/><g class="arrow" transform="translate(267 239)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
-            <g class="hotspot" data-city="nagano" role="button" tabindex="0" aria-label="開啟長野行程"><circle class="hit" cx="665" cy="324" r="135"/><circle class="halo" cx="665" cy="324" r="132"/><g class="arrow" transform="translate(783 224)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
-            <g class="hotspot" data-city="matsumoto" role="button" tabindex="0" aria-label="開啟松本行程"><circle class="hit" cx="152" cy="672" r="123"/><circle class="halo" cx="152" cy="672" r="120"/><g class="arrow" transform="translate(261 583)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
-            <g class="hotspot" data-city="karuizawa" role="button" tabindex="0" aria-label="開啟輕井澤行程"><circle class="hit" cx="762" cy="605" r="105"/><circle class="halo" cx="762" cy="605" r="102"/><g class="arrow" transform="translate(859 530)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
-            <g class="hotspot" data-city="tokyo" role="button" tabindex="0" aria-label="開啟東京及成田行程"><circle class="hit" cx="776" cy="847" r="107"/><circle class="halo" cx="776" cy="847" r="104"/><g class="arrow" transform="translate(874 762)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
-            <g class="hotspot" data-city="kawasaki" role="button" tabindex="0" aria-label="開啟川崎行程"><circle class="hit" cx="289" cy="1020" r="106"/><circle class="halo" cx="289" cy="1020" r="103"/><g class="arrow" transform="translate(385 940)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
+            <g class="hotspot" data-city="kanazawa" role="button" tabindex="0" aria-label="開啟金澤行程"><circle class="hit" cx="142" cy="320" r="112"/><circle class="halo" cx="142" cy="320" r="109"/><g class="arrow" transform="translate(240 250)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
+            <g class="hotspot" data-city="nagano" role="button" tabindex="0" aria-label="開啟長野行程"><circle class="hit" cx="705" cy="334" r="121"/><circle class="halo" cx="705" cy="334" r="118"/><g class="arrow" transform="translate(799 249)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
+            <g class="hotspot" data-city="matsumoto" role="button" tabindex="0" aria-label="開啟松本行程"><circle class="hit" cx="198" cy="640" r="123"/><circle class="halo" cx="198" cy="640" r="120"/><g class="arrow" transform="translate(296 552)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
+            <g class="hotspot" data-city="karuizawa" role="button" tabindex="0" aria-label="開啟輕井澤行程"><circle class="hit" cx="908" cy="571" r="124"/><circle class="halo" cx="908" cy="571" r="121"/><g class="arrow" transform="translate(1008 481)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
+            <g class="hotspot" data-city="tokyo" role="button" tabindex="0" aria-label="開啟東京及成田行程"><circle class="hit" cx="820" cy="837" r="139"/><circle class="halo" cx="820" cy="837" r="136"/><g class="arrow" transform="translate(934 738)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
+            <g class="hotspot" data-city="kawasaki" role="button" tabindex="0" aria-label="開啟川崎行程"><circle class="hit" cx="395" cy="981" r="131"/><circle class="halo" cx="395" cy="981" r="128"/><g class="arrow" transform="translate(510 894)"><circle r="22"/><path d="M-8 0 H8 M2 -6 L8 0 L2 6"/></g></g>
           </svg>
         </div>
         <nav class="city-pills" aria-label="快速選擇城市">
@@ -42,7 +42,7 @@
       </aside>
     </section>
   </main>
-  <footer>2026 信州・長野秋冬之旅 · 所有行程與費用依提供的旅遊筆記整理 · <span>地圖連結將開啟 Google Maps</span></footer>
+  <footer>202612信州行 · 所有行程與費用依提供的旅遊筆記整理 · <span>地圖連結將開啟 Google Maps</span></footer>
   <div class="scrim" id="scrim" hidden></div>
 </body>
 </html>
