@@ -3,3 +3,23 @@
 /* Updated artwork: maintain image-to-hit-area registration at all screen widths. */
 .map-stage{isolation:isolate}.map-image{aspect-ratio:1122 / 1402}.hotspot:focus-visible .halo{stroke:#ffe087}.hotspot .hit{pointer-events:all}.hotspot:focus{outline:none}.hotspot.active .arrow{opacity:1}
 @media(hover:none){.hotspot .halo{transition:opacity .15s ease}.hotspot.active .halo{opacity:1}}
+
+/* Google Sheets 共同記帳 */
+.expense-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 20px}
+.expense-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:750;color:#37516a}
+.expense-form label:nth-child(3),.expense-form label:nth-child(7),.expense-form label:nth-child(8){grid-column:1/-1}
+.expense-form input,.expense-form select{width:100%;padding:10px;border:1px solid #cbd8df;border-radius:9px;background:#fff;color:#193650;font:inherit;font-size:14px;min-width:0}
+.expense-form input:focus,.expense-form select:focus{outline:2px solid #e8b85b;outline-offset:1px}
+.expense-form .primary-btn{grid-column:1/-1;font-size:14px;min-height:43px}
+.expense-form .primary-btn:disabled{opacity:.6;cursor:wait}
+.budget-buttons{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0 20px}
+.budget-status{background:#edf5f8;border:1px solid #d4e7f0;color:#214d68;border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12px;line-height:1.6}
+.budget-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin:14px 0}
+.budget-totals>div{background:#ecf2f2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:3px}
+.budget-totals span{font-size:12px;color:#657b87}.budget-totals strong{font-size:22px;color:#173c57}
+.expense-scroll{overflow:auto}.expense-table{min-width:310px}.expense-table td{font-size:12px;word-break:break-word}.expense-table .amount{text-align:right;white-space:nowrap;font-weight:750}
+.hotel-feature{margin:13px 0;border:1px solid #e5daca;border-radius:13px;padding:12px;background:#fffdf8}
+.hotel-feature img{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:9px;margin-bottom:12px}
+.hotel-feature strong{display:block;font-size:13px;line-height:1.5}.hotel-feature p{margin:6px 0;font-size:12px;color:#6c7780}
+.hotel-card{margin:10px 0}.hotel-card img{display:block;width:100%;max-height:160px;object-fit:cover;border-radius:8px}.hotel-card a{display:inline-block;margin-top:6px;font-size:12px}
+@media(max-width:480px){.expense-form{grid-template-columns:1fr}.expense-form label{grid-column:1/-1}}
