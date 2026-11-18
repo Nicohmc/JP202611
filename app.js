@@ -105,91 +105,102 @@ function selectCity(id){
   openPanel();
 }
 function selectDay(id){expenseView=0;const day=DAYS.find(d=>d.id===id);if(!day)return;kicker.textContent='DAILY ITINERARY · 每日行程';content.innerHTML=`<h2>${esc(day.date)}</h2><p class="subtitle">${esc(day.title)}</p><nav class="date-nav" aria-label="選擇日期">${DAYS.map(d=>`<button type="button" class="date-chip ${d.id===id?'selected':''}" data-open-day="${d.id}">${esc(d.date.split('（')[0])}</button>`).join('')}</nav>${entriesMarkup(day.entries)}`;openPanel();}
-// 費用紀錄只透過 GAS 儲存；未連線時顯示原始筆記供參考，避免把未儲存項目當作共享紀錄。
-const GAS_URL = (window.TRIP_CONFIG?.gasWebAppUrl || '').trim();
-let expenseRows = [];
-let expenseView = 0;
-let expenseRequest = 0;
-let budgetBusy = false;
-const money = n => Number(n).toLocaleString('zh-TW',{maximumFractionDigits:2});
-const totals = rows => rows.reduce((acc,r)=>{const k=r.currency || '未指定'; acc[k]=(acc[k]||0)+Number(r.amount||0);return acc;},{});
-const getExpenses = (cb) => {
-  if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(GAS_URL)) { cb(new Error('尚未設定 GAS 網址'));return; }
-  const name = '__tripJsonp' + (++expenseRequest);
-  const script = document.createElement('script');
-  let done = false;
+// 共用費用：JSONP 公開讀取；POST 寫入，送出後讀回確認（不宣稱 opaque 回應即表示成功）。
+const GAS_URL=(window.TRIP_CONFIG?.gasWebAppUrl||'').trim();
+let expenseRows=[];
+let expenseView=0;
+let expenseRequest=0;
+let budgetBusy=false;
+let editingExpenseId='';
+const money=n=>Number(n).toLocaleString('zh-TW',{maximumFractionDigits:2});
+const totals=rows=>rows.reduce((acc,r)=>{const k=r.currency||'未指定';acc[k]=(acc[k]||0)+Number(r.amount||0);return acc;},{});
+const dateOptions=()=>DAYS.map(d=>`<option value="2026-${d.id.slice(0,2)}-${d.id.slice(2)}">${esc(d.date)}</option>`).join('');
+function getExpenses(cb){
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(GAS_URL)){cb(new Error('GAS 網址不正確'));return;}
+  const name='__tripJsonp'+(++expenseRequest),script=document.createElement('script');
+  let done=false;
   const finish=(err,data)=>{if(done)return;done=true;clearTimeout(timer);script.remove();delete window[name];cb(err,data);};
   window[name]=data=>finish(null,data);
-  script.onerror=()=>finish(new Error('讀取失敗，請確認 GAS 已部署並允許存取'));
+  script.onerror=()=>finish(new Error('讀取失敗，請確認 GAS 部署可公開存取'));
   const timer=setTimeout(()=>finish(new Error('連線逾時，請重試')),15000);
-  script.src=GAS_URL+'?action=list&callback='+name+'&t='+Date.now();
-  document.head.appendChild(script);
-};
-const expenseTable = () => {
-  const sum=totals(expenseRows);
-  const groups=Object.entries(sum).map(([k,v])=>`<div><span>${esc(k)}</span><strong>${money(v)}</strong></div>`).join('') || '<span>尚無儲存的費用</span>';
-  return `<div class="budget-totals">${groups}</div><div class="expense-scroll"><table class="expense-table"><thead><tr><th>日期</th><th>項目</th><th>付款／記錄人</th><th>金額</th></tr></thead><tbody>${expenseRows.length?expenseRows.map(r=>`<tr><td>${esc(r.date)}</td><td><strong>${esc(r.category)}</strong><div>${esc(r.description||'')}</div></td><td>${esc(r.person||'—')}</td><td class="amount">${esc(r.currency)} ${money(r.amount)}</td></tr>`).join(''):'<tr><td colspan="4">目前沒有共同費用紀錄</td></tr>'}</tbody></table></div>`;
-};
+  script.src=GAS_URL+'?action=list&callback='+name+'&t='+Date.now();document.head.appendChild(script);
+}
+function expenseTable(){
+  const groups=Object.entries(totals(expenseRows)).map(([k,v])=>`<div><span>${esc(k)}</span><strong>${money(v)}</strong></div>`).join('')||'<span>尚無儲存的費用</span>';
+  return `<div class="budget-totals">${groups}</div><div class="expense-scroll"><table class="expense-table"><thead><tr><th>日期</th><th>項目／備註</th><th>記錄人</th><th>金額</th><th>操作</th></tr></thead><tbody>${expenseRows.length?expenseRows.map(r=>`<tr><td>${esc(r.date)}</td><td><strong>${esc(r.category)} · ${esc(r.description||'')}</strong>${r.note?`<div class="item-note">${esc(r.note)}</div>`:''}${r.updatedAt?`<div class="item-note">修改：${esc(r.updatedAt)}</div>`:''}</td><td>${esc(r.person||'—')}</td><td class="amount">${esc(r.currency)} ${money(r.amount)}</td><td><button type="button" class="edit-expense-btn" data-edit-expense="${esc(r.id)}" aria-label="編輯 ${esc(r.description||'記帳')}" ${budgetBusy?'disabled':''}>✎ 編輯</button></td></tr>`).join(''):'<tr><td colspan="5">目前沒有共同費用紀錄</td></tr>'}</tbody></table></div>`;
+}
 function drawExpenses(message=''){
-  if(expenseView===0)return;
-  content.innerHTML=`<h2>共同旅費記錄</h2><p class="subtitle">新增後會寫入 Google 試算表，其他旅伴重新整理即可看見。依幣別分開加總，不混算日圓與台幣。</p>
-  ${message?`<div class="budget-status" role="status">${esc(message)}</div>`:''}
-  <div id="expense-report">${expenseTable()}</div>
-  <div class="budget-buttons"><button type="button" class="outline-btn" id="expense-refresh">↻ 重新整理</button><a class="map-link" href="./README.md" target="_blank" rel="noopener">設定說明</a></div>
-  <h3>新增一筆共同費用</h3>
-  <form id="expense-form" class="expense-form">
-    <label>日期<select name="date" required>${DAYS.map(d=>`<option value="2026-${d.id==='1201'||d.id==='1202'?'12':'11'}-${d.id.slice(2)}">${esc(d.date)}</option>`).join('')}</select></label>
-    <label>類別<select name="category" required><option>住宿</option><option>交通</option><option>餐飲</option><option>景點</option><option>購物</option><option>其他</option></select></label>
-    <label>項目說明<input name="description" maxlength="120" placeholder="例：長野晚餐" required></label>
-    <label>金額<input name="amount" type="number" min="0.01" step="0.01" placeholder="例如 3500" required></label>
-    <label>幣別<select name="currency" required><option value="JPY">JPY 日圓</option><option value="TWD">TWD 台幣</option><option value="未指定">未指定</option></select></label>
-    <label>付款／記錄人<input name="person" maxlength="40" placeholder="輸入名字（選填）"></label>
-    <label>備註<input name="note" maxlength="240" placeholder="選填"></label>
-    <label>共同記帳碼（若有設定）<input name="pin" type="password" maxlength="60" autocomplete="off" placeholder="未設定就留空"></label>
-    <button type="submit" class="primary-btn" ${budgetBusy?'disabled':''}>${budgetBusy?'儲存中…':'＋ 儲存到 Google 試算表'}</button>
-  </form>
-  <div class="info-block"><strong>原始筆記（不計入線上總額）：</strong>11/25 住宿 18,254 × 4 + 19,224 = 92,240；車子 5,606 × 5 = 28,030。原筆記未標示幣別。若需納入加總，請在 GAS 先執行 <code>seedInitialExpenses</code> 一次，或手動新增並選擇正確幣別。</div>
-  ${!GAS_URL?'<div class="info-block">尚未串接 GAS：請依 README 將部署網址填入 <code>config.js</code>，即可啟用大家共同新增記帳。</div>':''}`;
+  if(!expenseView)return;
+  const editing=expenseRows.find(r=>r.id===editingExpenseId);
+  if(editingExpenseId&&!editing)editingExpenseId='';
+  content.innerHTML=`<h2>共同旅費記錄</h2><p class="subtitle">多人可新增及編輯，更新直接寫回 Google 試算表。日圓、台幣與未指定幣別分開加總。</p>
+    ${message?`<div class="budget-status" role="status">${esc(message)}</div>`:''}
+    <div id="expense-report">${expenseTable()}</div>
+    <div class="budget-buttons"><button type="button" class="outline-btn" id="expense-refresh" ${budgetBusy?'disabled':''}>↻ 重新整理</button><a class="map-link" href="./README.md" target="_blank" rel="noopener">設定說明</a></div>
+    <h3 id="expense-form-heading">${editing?'修改這筆費用':'新增一筆共同費用'}</h3>
+    <form id="expense-form" class="expense-form">
+      <label>日期<select name="date" required>${dateOptions()}</select></label>
+      <label>類別<select name="category" required><option>住宿</option><option>交通</option><option>餐飲</option><option>景點</option><option>購物</option><option>其他</option></select></label>
+      <label>項目說明<input name="description" maxlength="120" placeholder="例：長野晚餐" required></label>
+      <label>金額<input name="amount" type="number" min="0.01" step="0.01" placeholder="例如 3500" required></label>
+      <label>幣別<select name="currency" required><option value="JPY">JPY 日圓</option><option value="TWD">TWD 台幣</option><option value="未指定">未指定</option></select></label>
+      <label>付款／記錄人<input name="person" maxlength="40" placeholder="選填"></label>
+      <label>備註<input name="note" maxlength="240" placeholder="選填"></label>
+      <label>共同記帳碼（若有設定）<input name="pin" type="password" maxlength="60" autocomplete="off" placeholder="未設定就留空"></label>
+      <div class="expense-form-actions"><button type="submit" class="primary-btn" ${budgetBusy?'disabled':''}>${budgetBusy?'儲存中…':editing?'✓ 儲存修改':'＋ 儲存新紀錄'}</button>${editing?'<button type="button" class="outline-btn" id="expense-cancel">取消編輯</button>':''}</div>
+    </form>
+    <div class="info-block"><strong>原始筆記（不計入線上總額）：</strong>11/25 住宿 18,254 × 4 + 19,224 = 92,240；車子 5,606 × 5 = 28,030，幣別尚未確認。如要加入線上加總，可在 GAS 執行 <code>seedInitialExpenses</code> 一次。</div>`;
+  const form=document.querySelector('#expense-form');
+  if(editing){for(const key of ['date','category','description','amount','currency','person','note']){const field=form.elements.namedItem(key);if(field)field.value=editing[key]??'';}}
   document.querySelector('#expense-refresh').addEventListener('click',refreshExpenses);
-  document.querySelector('#expense-form').addEventListener('submit',submitExpense);
+  form.addEventListener('submit',submitExpense);
+  content.querySelectorAll('[data-edit-expense]').forEach(btn=>btn.addEventListener('click',()=>editExpense(btn.dataset.editExpense)));
+  document.querySelector('#expense-cancel')?.addEventListener('click',()=>{editingExpenseId='';drawExpenses('已取消編輯');});
+}
+function editExpense(id){
+  if(budgetBusy)return;
+  const row=expenseRows.find(r=>r.id===id);if(!row)return;
+  editingExpenseId=id;drawExpenses('正在編輯：'+row.description+'。修改後請按「儲存修改」。');
+  document.querySelector('#expense-form-heading')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function refreshExpenses(){
-  if(!expenseView)return;
-  const requestView=expenseView;
+  if(!expenseView||budgetBusy)return;
+  const currentView=expenseView;
   const btn=document.querySelector('#expense-refresh');if(btn)btn.disabled=true;
   getExpenses((err,res)=>{
-    if(!expenseView||requestView!==expenseView)return;
-    if(err||!res||res.ok!==true){drawExpenses('尚未連線：'+(err?.message||res?.error||'未知錯誤'));return;}
+    if(!expenseView||currentView!==expenseView)return;
+    if(err||!res||res.ok!==true){drawExpenses('讀取失敗：'+(err?.message||res?.error||'未知錯誤'));return;}
     expenseRows=Array.isArray(res.rows)?res.rows:[];
-    drawExpenses('已從 Google 試算表更新：'+expenseRows.length+' 筆');
+    drawExpenses('已同步 Google 試算表：'+expenseRows.length+' 筆');
   });
 }
-function openBudget(){
-  expenseView=Date.now();kicker.textContent='SHARED EXPENSES · 共同記帳';expenseRows=[];drawExpenses();openPanel();refreshExpenses();
-}
+function openBudget(){expenseView=Date.now();editingExpenseId='';kicker.textContent='SHARED EXPENSES · 共同記帳';expenseRows=[];drawExpenses();openPanel();refreshExpenses();}
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function submitExpense(e){
   e.preventDefault();if(budgetBusy)return;
-  if(!GAS_URL){drawExpenses('請先設定 GAS 網址（config.js），目前無法儲存');return;}
-  const form=e.currentTarget;
-  const payload=Object.fromEntries(new FormData(form).entries());
+  if(!GAS_URL){drawExpenses('GAS 網址尚未設定');return;}
+  const form=e.currentTarget,payload=Object.fromEntries(new FormData(form).entries());
   if(!Number.isFinite(Number(payload.amount))||Number(payload.amount)<=0){drawExpenses('金額必須大於 0');return;}
-  const recordId = 'trip-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
-  payload.action='add';payload.id=recordId;
+  const oldRow=expenseRows.find(r=>r.id===editingExpenseId);
+  const isEdit=Boolean(oldRow);
+  payload.action=isEdit?'update':'add';
+  payload.id=isEdit?oldRow.id:'trip-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
+  const expected={...payload,amount:Number(payload.amount)};
   budgetBusy=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;submit.textContent='儲存中…';
-  try {
-    // GAS Web App 跨網域寫入使用 simple request；回應為 opaque，因此要再次讀取紀錄確認成功。
+  try{
     await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:new URLSearchParams(payload)});
-    let found=false;let last='';
-    for(const wait of [700,1400,2200,3200]){
-      await new Promise(r=>setTimeout(r,wait));
+    let confirmed=false,last='';
+    for(const wait of [700,1400,2400,3500]){
+      await sleep(wait);
       const result=await new Promise(resolve=>getExpenses((err,res)=>resolve({err,res})));
-      if(result.err||result.res?.ok!==true){last=result.err?.message||result.res?.error||'暫時無法確認';continue;}
+      if(result.err||result.res?.ok!==true){last=result.err?.message||result.res?.error||'無法讀取';continue;}
       expenseRows=Array.isArray(result.res.rows)?result.res.rows:[];
-      if(expenseRows.some(r=>r.id===recordId)){found=true;break;}
+      const found=expenseRows.find(r=>r.id===expected.id);
+      if(found&&['date','category','description','currency','person','note'].every(k=>String(found[k]??'')===String(expected[k]??''))&&Math.abs(Number(found.amount)-expected.amount)<0.005){confirmed=true;break;}
     }
     budgetBusy=false;
-    if(found){drawExpenses('✓ 已儲存至 Google 試算表，其他旅伴重新整理即可看到');}
-    else {drawExpenses('尚未確認是否寫入（'+(last||'可能為部署權限或記帳碼問題')+'）。請先按「重新整理」確認，避免重複新增。');}
+    if(confirmed){editingExpenseId='';drawExpenses(isEdit?'✓ 修改已寫入 Google 試算表':'✓ 已新增到 Google 試算表');}
+    else {drawExpenses('尚未確認'+(isEdit?'修改':'新增')+'成功（'+(last||'可能尚未部署新版 GAS、記帳碼不符或無權限')+'）。請按重新整理確認，避免重複送出。');}
   }catch(err){budgetBusy=false;drawExpenses('送出失敗：'+(err?.message||'網路錯誤'));}
 }
 function openAll(){expenseView=0;kicker.textContent='FULL ITINERARY · 全部行程';content.innerHTML=`<h2>2026 信州行</h2><p class="subtitle">11/25（三）－ 12/02（三） · 8 天行程筆記</p><nav class="date-nav" aria-label="快速跳到日期">${DAYS.map(d=>`<button type="button" class="date-chip" data-open-day="${d.id}">${esc(d.date.split('（')[0])}</button>`).join('')}</nav>${DAYS.map(dayMarkup).join('')}<div class="info-block"><strong>資料註記：</strong>12/02 尚未安排；未提供名稱的店家以原 Google Maps 連結呈現。地圖搜尋連結為輔助推薦，原筆記連結均原樣保留。</div>`;openPanel();}
