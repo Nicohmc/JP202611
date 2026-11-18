@@ -127,7 +127,7 @@ function getExpenses(cb){
 }
 function expenseTable(){
   const groups=Object.entries(totals(expenseRows)).map(([k,v])=>`<div><span>${esc(k)}</span><strong>${money(v)}</strong></div>`).join('')||'<span>尚無儲存的費用</span>';
-  return `<div class="budget-totals">${groups}</div><div class="expense-scroll"><table class="expense-table"><thead><tr><th>日期</th><th>項目／備註</th><th>記錄人</th><th>金額</th><th>操作</th></tr></thead><tbody>${expenseRows.length?expenseRows.map(r=>`<tr><td>${esc(r.date)}</td><td><strong>${esc(r.category)} · ${esc(r.description||'')}</strong>${r.note?`<div class="item-note">${esc(r.note)}</div>`:''}${r.updatedAt?`<div class="item-note">修改：${esc(r.updatedAt)}</div>`:''}</td><td>${esc(r.person||'—')}</td><td class="amount">${esc(r.currency)} ${money(r.amount)}</td><td><button type="button" class="edit-expense-btn" data-edit-expense="${esc(r.id)}" aria-label="編輯 ${esc(r.description||'記帳')}" ${budgetBusy?'disabled':''}>✎ 編輯</button></td></tr>`).join(''):'<tr><td colspan="5">目前沒有共同費用紀錄</td></tr>'}</tbody></table></div>`;
+  return `<div class="budget-totals">${groups}</div><div class="expense-scroll"><table class="expense-table"><thead><tr><th>日期</th><th>項目／備註</th><th>付款人</th><th>金額</th><th>操作</th></tr></thead><tbody>${expenseRows.length?expenseRows.map(r=>`<tr><td>${esc(r.date)}</td><td><strong>${esc(r.category)} · ${esc(r.description||'')}</strong>${r.note?`<div class="item-note">${esc(r.note)}</div>`:''}${r.updatedAt?`<div class="item-note">修改：${esc(r.updatedAt)}</div>`:''}</td><td>${esc(r.person||'—')}</td><td class="amount">${esc(r.currency)} ${money(r.amount)}</td><td><button type="button" class="edit-expense-btn" data-edit-expense="${esc(r.id)}" aria-label="編輯 ${esc(r.description||'記帳')}" ${budgetBusy?'disabled':''}>✎ 編輯</button></td></tr>`).join(''):'<tr><td colspan="5">目前沒有共同費用紀錄</td></tr>'}</tbody></table></div>`;
 }
 function drawExpenses(message=''){
   if(!expenseView)return;
@@ -144,7 +144,7 @@ function drawExpenses(message=''){
       <label>項目說明<input name="description" maxlength="120" placeholder="例：長野晚餐" required></label>
       <label>金額<input name="amount" type="number" min="0.01" step="0.01" placeholder="例如 3500" required></label>
       <label>幣別<select name="currency" required><option value="JPY">JPY 日圓</option><option value="TWD">TWD 台幣</option><option value="未指定">未指定</option></select></label>
-      <label>付款／記錄人<input name="person" maxlength="40" placeholder="選填"></label>
+      <label>付款人<input name="person" maxlength="40" placeholder="選填"></label>
       <label>備註<input name="note" maxlength="240" placeholder="選填"></label>
       <label>共同記帳碼（若有設定）<input name="pin" type="password" maxlength="60" autocomplete="off" placeholder="未設定就留空"></label>
       <div class="expense-form-actions"><button type="submit" class="primary-btn" ${budgetBusy?'disabled':''}>${budgetBusy?'儲存中…':editing?'✓ 儲存修改':'＋ 儲存新紀錄'}</button>${editing?'<button type="button" class="outline-btn" id="expense-cancel">取消編輯</button>':''}</div>
